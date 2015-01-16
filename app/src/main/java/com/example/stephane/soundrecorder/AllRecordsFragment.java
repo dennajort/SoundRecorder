@@ -49,17 +49,18 @@ public class AllRecordsFragment extends Fragment implements AdapterView.OnItemLo
         ContentResolver cr = getActivity().getContentResolver();
 
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
-        Cursor cur = cr.query(uri, null, selection, null, sortOrder);
+        Cursor cur = cr.query(uri, null, null, null, sortOrder);
         int count = 0;
         if (cur != null) {
             count = cur.getCount();
             if (count > 0) {
                 while(cur.moveToNext()) {
-                    this.allRecords.add(new Record(cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA)),
-                                    cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)),
-                                    cur.getInt(cur.getColumnIndex(MediaStore.Audio.Media.DURATION))));
+                    if (cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA)).startsWith(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC) + "/records")) {
+                        this.allRecords.add(new Record(cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA)),
+                                cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)),
+                                cur.getInt(cur.getColumnIndex(MediaStore.Audio.Media.DURATION))));
+                    }
                 }
                 this.allRecordsListView = (ListView) rootView.findViewById(R.id.allRecordsListView);
                 adapter = new RecordsAdapter(rootView.getContext(), this.allRecords);
@@ -76,8 +77,8 @@ public class AllRecordsFragment extends Fragment implements AdapterView.OnItemLo
                 });
 
             }
+            cur.close();
         }
-        cur.close();
 
         return rootView;
     }
