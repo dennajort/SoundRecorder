@@ -103,8 +103,7 @@ public class AllRecordsFragment extends Fragment implements AdapterView.OnItemLo
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (mActionMode == null) {
-            ((MainActivity)getActivity()).setFileNamePlaying(allRecords.get(position).name);
-            ((MainActivity)getActivity()).playSongPath(allRecords.get(position).path);
+            ((MainActivity)getActivity()).getPlayerFragment().getFragmentControls().playSong(allRecords.get(position));
         } else {
             onListItemSelect(position);
         }

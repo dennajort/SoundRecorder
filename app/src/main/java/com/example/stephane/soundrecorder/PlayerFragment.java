@@ -12,15 +12,19 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.Console;
+
 /**
  * Created by Stéphane on 11/01/2015.
  */
 
 public class PlayerFragment extends Fragment {
 
+
+
     private MediaPlayer mPlayer = null;
     private AllRecordsFragment fragmentAllRecords = null;
-    private AllRecordsFragment fragmentControls = null;
+    private ControlsFragment fragmentControls = null;
 
     public PlayerFragment() {
     }
@@ -31,7 +35,7 @@ public class PlayerFragment extends Fragment {
         Log.i("playerfragment", "onCreate");
 
         fragmentAllRecords = new AllRecordsFragment();
-        fragmentControls = new AllRecordsFragment();
+        fragmentControls = new ControlsFragment();
     }
 
     @Override
@@ -58,5 +62,13 @@ public class PlayerFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+    }
+
+    public AllRecordsFragment getFragmentAllRecords() {
+        return this.fragmentAllRecords;
+    }
+
+    public ControlsFragment getFragmentControls() {
+        return this.fragmentControls;
     }
 }

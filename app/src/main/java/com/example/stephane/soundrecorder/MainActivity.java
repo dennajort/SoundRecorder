@@ -202,4 +202,8 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
             // Unable to resolve, message user appropriately
         }
     }
+
+    public PlayerFragment getPlayerFragment() {
+        return this.playerFragment;
+    }
 }
