@@ -157,8 +157,5 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
 
     public void setFileNamePlaying(String name) {
         this.mFileNamePlaying = name;
-        if (recordFragment != null) {
-            recordFragment.changeMusicPlayingText(name);
-        }
     }
 }
