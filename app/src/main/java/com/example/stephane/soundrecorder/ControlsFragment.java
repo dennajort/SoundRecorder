@@ -2,7 +2,9 @@ package com.example.stephane.soundrecorder;
 
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -24,11 +27,31 @@ public class ControlsFragment extends Fragment {
         NOTHING
     }
 
-    private State mState = State.NOTHING;
+
+    private static class Data {
+        private static Data instance = null;
+
+
+        public static Data getInstance() {
+            if (instance == null) {
+                instance = new Data();
+            }
+            return instance;
+        }
+
+        private Data() {
+
+        }
+        private State mState = State.NOTHING;
+        private MediaPlayer mPlayer = null;
+        public String songName = "";
+        public String songDuration = "";
+    }
+
     private TextView songNameText;
     private TextView songDurationText;
     private ImageView actionButton;
-    private MediaPlayer mPlayer = null;
+    private Data data = null;
 
     public ControlsFragment() {
     }
@@ -36,6 +59,7 @@ public class ControlsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        data = Data.getInstance();
     }
 
     @Override
@@ -45,21 +69,28 @@ public class ControlsFragment extends Fragment {
         songNameText = (TextView) rootView.findViewById(R.id.recordName);
         songDurationText = (TextView) rootView.findViewById(R.id.recordDuration);
 
+        songNameText.setText(data.songName);
+        songDurationText.setText(data.songDuration);
+
         actionButton = (ImageView)rootView.findViewById(R.id.player_action);
+        if (data.mState == State.PLAYING) {
+            actionButton.setImageResource(R.drawable.controls_pause);
+        }
+
         actionButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View view) {
-                if (mState == State.PLAYING) {
-                    if (mPlayer != null) {
-                        mState = State.PAUSE;
+                if (data.mState == State.PLAYING) {
+                    if (data.mPlayer != null) {
+                        data.mState = State.PAUSE;
                         actionButton.setImageResource(R.drawable.controls_play);
-                        mPlayer.pause();
+                        data.mPlayer.pause();
                     }
                 }
                 else {
-                    if (mPlayer != null) {
-                        mState = State.PLAYING;
+                    if (data.mPlayer != null) {
+                        data.mState = State.PLAYING;
                         actionButton.setImageResource(R.drawable.controls_pause);
-                        mPlayer.start();
+                        data.mPlayer.start();
                     }
                 }
 
@@ -72,31 +103,33 @@ public class ControlsFragment extends Fragment {
     public void playSong(Record record) {
         songNameText.setText(record.name);
         songDurationText.setText(record.duration);
+        data.songName = record.name;
+        data.songDuration = record.duration;
 
-        if (mState == State.PLAYING) {
-            mPlayer.release();
+        if (data.mState == State.PLAYING) {
+            data.mPlayer.release();
         }
-        mPlayer = null;
-        mPlayer = new MediaPlayer();
-        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        data.mPlayer = null;
+        data.mPlayer = new MediaPlayer();
+        data.mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
-            mPlayer.setDataSource(record.path);
-            mPlayer.prepare();
-            mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            data.mPlayer.setDataSource(record.path);
+            data.mPlayer.prepare();
+            data.mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer arg0) {
-                    mState = State.NOTHING;
+                    data.mState = State.NOTHING;
                     actionButton.setImageResource(R.drawable.controls_play);
-                    if (mPlayer != null) {
-                        mPlayer.seekTo(0);
+                    if (data.mPlayer != null) {
+                        data.mPlayer.seekTo(0);
                     }
                 }
             });
-            mPlayer.start();
-            mState = State.PLAYING;
+            data.mPlayer.start();
+            data.mState = State.PLAYING;
             actionButton.setImageResource(R.drawable.controls_pause);
         } catch (IOException e) {
-            mState = State.NOTHING;
+            data.mState = State.NOTHING;
             actionButton.setImageResource(R.drawable.controls_play);
             Log.e("playSongPath", "prepare() failed");
         }

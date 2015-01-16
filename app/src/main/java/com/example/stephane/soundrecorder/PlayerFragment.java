@@ -20,8 +20,6 @@ import java.io.Console;
 
 public class PlayerFragment extends Fragment {
 
-
-
     private MediaPlayer mPlayer = null;
     private AllRecordsFragment fragmentAllRecords = null;
     private ControlsFragment fragmentControls = null;
