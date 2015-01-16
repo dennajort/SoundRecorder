@@ -37,7 +37,6 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private State mState = State.NOTHING;
     private String mFileNamePlaying = "";
-    private MediaPlayer mPlayer = null;
 
     private RecordFragment recordFragment = null;
     private AllRecordsFragment allRecordsFragment = null;
@@ -48,6 +47,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         if (savedInstanceState != null) {
+            mState = State.values()[savedInstanceState.getInt("mState")];
             allRecordsFragment = (AllRecordsFragment) fragmentManager.getFragment(savedInstanceState, "allRecordsFragment");
             recordFragment = (RecordFragment) fragmentManager.getFragment(savedInstanceState, "recordFragment");
         }
@@ -81,6 +81,8 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+
+        outState.putInt("mState", mState.ordinal());
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.putFragment(outState, "recordFragment", recordFragment);
@@ -118,24 +120,27 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
     }
 
     public void playSongPath(String filePath) {
+        CommonData common = CommonData.getInstance();
         if (mState == State.PLAYING) {
-            mPlayer.release();
+            common.mPlayer.release();
         }
-        mPlayer = null;
-        mPlayer = new MediaPlayer();
-        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+        common.mPlayer = new MediaPlayer();
+        common.mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
-            mPlayer.setDataSource(filePath);
-            mPlayer.prepare();
-            mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            common.mPlayer.setDataSource(filePath);
+            common.mPlayer.prepare();
+            common.mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer arg0) {
                     mState = State.NOTHING;
-                    if (mPlayer != null) {
-                        mPlayer.release(); }
+                    CommonData common = CommonData.getInstance();
+                    if (common.mPlayer != null) {
+                        common.mPlayer.release();
+                    }
                 }
             });
-            mPlayer.start();
+            common.mPlayer.start();
             mState = State.PLAYING;
         } catch (IOException e) {
             Log.e("playSongPath", "prepare() failed");
