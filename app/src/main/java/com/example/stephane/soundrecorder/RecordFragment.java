@@ -4,7 +4,6 @@ import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -45,9 +45,10 @@ public class RecordFragment extends Fragment {
     private Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            mCounter += 1;
-            timerText.setText(durationStringFormat(mCounter));
-            handler.postDelayed(this, 1000);
+            if (mState == State.RECORDING) {
+                timerText.setText(durationStringFormat(++mCounter));
+                handler.postDelayed(this, 1000);
+            }
         }
     };
 
@@ -55,8 +56,7 @@ public class RecordFragment extends Fragment {
 
     }
 
-    private boolean copyFile(File src, File dst)
-    {
+    private boolean copyFile(File src, File dst) {
         FileChannel inChannel;
         FileChannel outChannel;
         try {
@@ -122,24 +122,27 @@ public class RecordFragment extends Fragment {
                             mMediaRecorder.start();
                             recordButton.setImageResource(R.drawable.stop_button_play_pause_music);
                             mState = State.RECORDING;
+                            mCounter = 0;
+                            timerText.setText(durationStringFormat(0));
+                            handler.postDelayed(runnable, 1000);
                         }
                         break;
                     case RECORDING:
                         mMediaRecorder.stop();
                         mMediaRecorder.reset();
-                        String fileName = "record_";
-                        fileName += DateFormat.format("yyyy-MM-dd_hh-mm-ss-SSS", new Date()).toString();
-                        fileName += ".3gpp";
-                        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), fileName);
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS");
+                        String fileName = "record_" + sdf.format(new Date()) + ".3gpp";
+                        File recordDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC) + "/records");
+                        recordDirectory.mkdirs();
+                        File file = new File(recordDirectory, fileName);
                         moveFile(mTempFile, file);
                         recordButton.setImageResource(R.drawable.record_button_play_stop_music);
                         mState = State.WAITING;
+                        handler.removeCallbacks(runnable);
                         break;
                     default:
                         break;
                 }
-                //mCounter = 0;
-                //handler.postDelayed(runnable, 1000);
             }
         });
         Log.e("record",((MainActivity)this.getActivity()).getFileNamePlaying());
