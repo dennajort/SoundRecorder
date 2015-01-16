@@ -39,7 +39,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
     private String mFileNamePlaying = "";
 
     private RecordFragment recordFragment = null;
-    private AllRecordsFragment allRecordsFragment = null;
+    private PlayerFragment playerFragment = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,13 +47,12 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         if (savedInstanceState != null) {
-            mState = State.values()[savedInstanceState.getInt("mState")];
-            allRecordsFragment = (AllRecordsFragment) fragmentManager.getFragment(savedInstanceState, "allRecordsFragment");
+            playerFragment = (PlayerFragment) fragmentManager.getFragment(savedInstanceState, "playerFragment");
             recordFragment = (RecordFragment) fragmentManager.getFragment(savedInstanceState, "recordFragment");
         }
-        if (allRecordsFragment == null) {
-            Log.i("MainActivity", "new AllRecordsFragment");
-            allRecordsFragment = new AllRecordsFragment();
+        if (playerFragment == null) {
+            Log.i("MainActivity", "new playerFragment");
+            playerFragment = new PlayerFragment();
         }
         if (recordFragment == null) {
             Log.i("MainActivity", "new RecordFragment");
@@ -68,25 +67,23 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
         if (!recordFragment.isAdded()) {
             fragmentManager.beginTransaction().replace(R.id.container, recordFragment).commit();
         }
-        if (!allRecordsFragment.isAdded()) {
-            fragmentManager.beginTransaction().replace(R.id.container2, allRecordsFragment).commit();
+        if (!playerFragment.isAdded()) {
+            fragmentManager.beginTransaction().replace(R.id.container2, playerFragment).commit();
         }
 
-        if (findViewById(R.id.main_land) == null) {
+        //if (findViewById(R.id.main_land) == null) {
             mNavigationDrawerFragment = (NavigationDrawerFragment) getFragmentManager().findFragmentById(R.id.fragment_drawer);
             mNavigationDrawerFragment.setup(R.id.fragment_drawer, (DrawerLayout) findViewById(R.id.drawer), mToolbar);
-        }
+        //}
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putInt("mState", mState.ordinal());
-
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.putFragment(outState, "recordFragment", recordFragment);
-        fragmentManager.putFragment(outState, "allRecordsFragment", allRecordsFragment);
+        fragmentManager.putFragment(outState, "playerFragment", playerFragment);
     }
 
     @Override
@@ -101,10 +98,10 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
         FragmentManager fragmentManager = getSupportFragmentManager();
         switch (position) {
             case 0:
-                fragmentManager.beginTransaction().hide(allRecordsFragment).show(recordFragment).commit();
+                fragmentManager.beginTransaction().hide(playerFragment).show(recordFragment).commit();
                 break;
             case 1:
-                fragmentManager.beginTransaction().hide(recordFragment).show(allRecordsFragment).commit();
+                fragmentManager.beginTransaction().hide(recordFragment).show(playerFragment).commit();
                 break;
             default:
                 break;
@@ -120,31 +117,30 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
     }
 
     public void playSongPath(String filePath) {
-        CommonData common = CommonData.getInstance();
+        /*
         if (mState == State.PLAYING) {
-            common.mPlayer.release();
+            mPlayer.release();
         }
-
-        common.mPlayer = new MediaPlayer();
-        common.mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mPlayer = null;
+        mPlayer = new MediaPlayer();
+        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
-            common.mPlayer.setDataSource(filePath);
-            common.mPlayer.prepare();
-            common.mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            mPlayer.setDataSource(filePath);
+            mPlayer.prepare();
+            mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer arg0) {
                     mState = State.NOTHING;
-                    CommonData common = CommonData.getInstance();
-                    if (common.mPlayer != null) {
-                        common.mPlayer.release();
-                    }
+                    if (mPlayer != null) {
+                        mPlayer.release(); }
                 }
             });
-            common.mPlayer.start();
+            mPlayer.start();
             mState = State.PLAYING;
         } catch (IOException e) {
             Log.e("playSongPath", "prepare() failed");
         }
+        */
     }
 
     public State getStatus() {

@@ -8,7 +8,7 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_weight="1"
+        android:layout_weight="0.9"
         android:background="#E74C3C">
         <TextView
             android:layout_width="fill_parent"
@@ -25,7 +25,9 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_weight="1">
+        android:gravity="center"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="0.6">
 
         <ImageView
             android:layout_width="wrap_content"
@@ -37,10 +39,11 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="2"
+            android:layout_weight="1"
             android:clickable="true"
             android:id="@+id/play"
             android:src="@drawable/play_button_next_stop_music_pause"/>
+
 
     </LinearLayout>
     <LinearLayout
@@ -54,6 +57,7 @@
             android:textColor="#555555"
             android:textSize="16sp"
             android:padding="16dp"
+            android:layout_gravity="bottom"
             android:id="@+id/fileNamePlaying"
             android:text="@string/fileName"/>
 
