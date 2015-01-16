@@ -59,7 +59,7 @@ public class AllRecordsFragment extends Fragment implements AdapterView.OnItemLo
                 while(cur.moveToNext()) {
                     this.allRecords.add(new Record(cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA)),
                                     cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)),
-                                    cur.getColumnIndex(MediaStore.Audio.Media.DURATION)));
+                                    cur.getInt(cur.getColumnIndex(MediaStore.Audio.Media.DURATION))));
                 }
                 this.allRecordsListView = (ListView) rootView.findViewById(R.id.allRecordsListView);
                 adapter = new RecordsAdapter(rootView.getContext(), this.allRecords);

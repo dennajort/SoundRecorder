@@ -13,30 +13,30 @@ public class Record {
     public String   name;
     public String   duration;
 
-    public Record(String path, String name, int duration) {
+    public Record(String path, String name, long duration) {
         this.path = path;
         this.name = name;
-        this.duration = Integer.toString(duration);
+        this.duration = durationStringFormat(duration / 1000);
     }
 
 
-    String durationStringFormat(int duration) {
+    String durationStringFormat(long duration) {
 
-        int h = duration / 3600;
-        int m = (duration - h * 3600) / 60;
-        int s = duration - (h * 3600 + m * 60);
+        long h = duration / 3600;
+        long m = (duration - h * 3600) / 60;
+        long s = duration - (h * 3600 + m * 60);
 
         String timeDuration = "";
 
         if (h < 10)
             timeDuration += "0";
-        timeDuration += (Integer.toString(h) + ":");
+        timeDuration += (Long.toString(h) + ":");
         if (m < 10)
             timeDuration += "0";
-        timeDuration += (Integer.toString(m) + ":");
+        timeDuration += (Long.toString(m) + ":");
         if (s < 10)
             timeDuration += "0";
-        timeDuration += Integer.toString(s);
+        timeDuration += Long.toString(s);
 
         return (timeDuration);
     }
