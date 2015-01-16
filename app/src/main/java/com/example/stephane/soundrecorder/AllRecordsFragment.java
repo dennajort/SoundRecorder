@@ -2,16 +2,12 @@ package com.example.stephane.soundrecorder;
 
 import android.app.Activity;
 import android.content.ContentResolver;
-import android.database.Cursor;
 import android.media.MediaMetadataRetriever;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.support.v7.view.ActionMode;
 import android.view.LayoutInflater;
@@ -46,38 +42,30 @@ public class AllRecordsFragment extends Fragment implements AdapterView.OnItemLo
         ContentResolver cr = getActivity().getContentResolver();
         this.allRecords.clear();
 
-        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
         File recordsDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC) + "/records");
-        Cursor cur = cr.query(uri, null, null, null, sortOrder);
-        int count = 0;
-        if (cur != null) {
-            count = cur.getCount();
-            if (count > 0) {
-                while(cur.moveToNext()) {
-                    if (cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA)).startsWith(recordsDirectory.getPath())) {
-                        this.allRecords.add(new Record(cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA)),
-                                cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)),
-                                cur.getInt(cur.getColumnIndex(MediaStore.Audio.Media.DURATION))));
-                    }
-                }
-                this.allRecordsListView = (ListView) rootView.findViewById(R.id.allRecordsListView);
-                adapter = new RecordsAdapter(rootView.getContext(), this.allRecords);
-                this.allRecordsListView.setAdapter(adapter);
-
-                allRecordsListView.setChoiceMode(AbsListView.CHOICE_MODE_NONE);
-                allRecordsListView.setOnItemClickListener(this);
-                allRecordsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-                    @Override
-                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                        onListItemSelect(position);
-                        return true;
-                    }
-                });
-
-            }
-            cur.close();
+        recordsDirectory.mkdirs();
+        File files[] = recordsDirectory.listFiles();
+        for (int i=0; i < files.length; i++) {
+            File file = files[i];
+            MediaMetadataRetriever meta = new MediaMetadataRetriever();
+            meta.setDataSource(file.getPath());
+            allRecords.add(new Record(file.getPath(), file.getName(), meta.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
         }
+
+
+        this.allRecordsListView = (ListView) rootView.findViewById(R.id.allRecordsListView);
+        adapter = new RecordsAdapter(rootView.getContext(), this.allRecords);
+        this.allRecordsListView.setAdapter(adapter);
+
+        allRecordsListView.setChoiceMode(AbsListView.CHOICE_MODE_NONE);
+        allRecordsListView.setOnItemClickListener(this);
+        allRecordsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                onListItemSelect(position);
+                return true;
+            }
+        });
     }
 
     @Override
