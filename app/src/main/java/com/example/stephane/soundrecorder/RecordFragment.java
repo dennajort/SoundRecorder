@@ -200,6 +200,8 @@ public class RecordFragment extends Fragment {
         recordDirectory.mkdirs();
         File file = new File(recordDirectory, fileName);
         moveFile(Data.getInstance().mTempFile, file);
+        final MainActivity activity = (MainActivity) getActivity();
+        activity.updateList();
     }
 
     private void endRecord() {
@@ -207,7 +209,7 @@ public class RecordFragment extends Fragment {
         data.mMediaRecorder.stop();
         data.mMediaRecorder.reset();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS");
-        final String fileName = "record_" + sdf.format(new Date()) + ".3gpp";
+        final String fileName = "record_" + sdf.format(new Date()) + ".3gp";
         final MainActivity activity = (MainActivity) getActivity();
 
         if (activity.mGoogleApiClient == null) {

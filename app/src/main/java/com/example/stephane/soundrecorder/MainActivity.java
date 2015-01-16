@@ -234,4 +234,10 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
     public PlayerFragment getPlayerFragment() {
         return this.playerFragment;
     }
+
+    public void updateList() {
+        if (playerFragment != null) {
+            playerFragment.updateList();
+        }
+    }
 }

@@ -52,6 +52,12 @@ public class PlayerFragment extends Fragment {
         return rootView;
     }
 
+    public void updateList() {
+        if (fragmentAllRecords != null) {
+            fragmentAllRecords.updateList();
+        }
+    }
+
     @Override
     public void onStop() {
         super.onStop();

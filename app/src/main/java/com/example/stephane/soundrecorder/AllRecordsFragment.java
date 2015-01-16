@@ -36,27 +36,26 @@ public class AllRecordsFragment extends Fragment implements AdapterView.OnItemLo
     private RecordsAdapter adapter;
     private ListView allRecordsListView;
     private ActionMode mActionMode = null ;
+    private View rootView;
 
     public AllRecordsFragment() {
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-        View rootView = inflater.inflate(R.layout.fragment_all_records, container, false);
-
+    public void updateList() {
         // List musics
         ContentResolver cr = getActivity().getContentResolver();
+        this.allRecords.clear();
 
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+        File recordsDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC) + "/records");
         Cursor cur = cr.query(uri, null, null, null, sortOrder);
         int count = 0;
         if (cur != null) {
             count = cur.getCount();
             if (count > 0) {
                 while(cur.moveToNext()) {
-                    if (cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA)).startsWith(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC) + "/records")) {
+                    if (cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA)).startsWith(recordsDirectory.getPath())) {
                         this.allRecords.add(new Record(cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA)),
                                 cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)),
                                 cur.getInt(cur.getColumnIndex(MediaStore.Audio.Media.DURATION))));
@@ -79,8 +78,14 @@ public class AllRecordsFragment extends Fragment implements AdapterView.OnItemLo
             }
             cur.close();
         }
+    }
 
-        return rootView;
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        this.rootView = inflater.inflate(R.layout.fragment_all_records, container, false);
+        updateList();
+        return this.rootView;
     }
 
     public void onListItemSelect(int position) {
