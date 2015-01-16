@@ -142,6 +142,7 @@ public class AllRecordsFragment extends Fragment implements AdapterView.OnItemLo
                     for (int i = (selected.size() - 1); i >= 0; i--) {
                         if (selected.valueAt(i)) {
                             Record record = adapter.getItem(selected.keyAt(i));
+                            record.remove();
                             adapter.remove(record);
                         }
                     }

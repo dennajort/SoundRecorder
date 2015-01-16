@@ -1,6 +1,7 @@
 package com.example.stephane.soundrecorder;
 
 import android.media.MediaMetadataRetriever;
+import android.util.Log;
 
 import java.io.File;
 
@@ -19,6 +20,15 @@ public class Record {
         this.duration = durationStringFormat(duration / 1000);
     }
 
+    void remove() {
+        File file = new File(this.path);
+        Log.e("delete", this.path);
+        if (file.exists()) {
+            file.delete();
+            Log.e("delete", this.path + " exists");
+
+        }
+    }
 
     String durationStringFormat(long duration) {
 
