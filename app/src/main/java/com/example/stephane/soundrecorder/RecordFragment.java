@@ -38,11 +38,28 @@ public class RecordFragment extends Fragment {
     private TextView timerText;
     private ImageView recordButton;
 
-    private int mCounter = 0;
-    private Handler handler = new Handler();
-    private State mState = State.WAITING;
-    private MediaRecorder mMediaRecorder = null;
-    private File mTempFile = null;
+    private static class Data {
+        private static Data instance = null;
+
+
+        public static Data getInstance() {
+            if (instance == null) {
+                instance = new Data();
+            }
+            return instance;
+        }
+
+        private Data() {
+            handler = new Handler();
+            mMediaRecorder = new MediaRecorder();
+        }
+
+        public int mCounter = 0;
+        public Handler handler = null;
+        public State mState = State.WAITING;
+        public MediaRecorder mMediaRecorder = null;
+        public File mTempFile = null;
+    }
 
     public enum State {
         WAITING,
@@ -52,9 +69,10 @@ public class RecordFragment extends Fragment {
     private Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            if (mState == State.RECORDING) {
-                timerText.setText(durationStringFormat(++mCounter));
-                handler.postDelayed(this, 1000);
+            Data data = Data.getInstance();
+            if (data.mState == State.RECORDING) {
+                timerText.setText(durationStringFormat(++data.mCounter));
+                data.handler.postDelayed(this, 1000);
             }
         }
     };
@@ -93,31 +111,32 @@ public class RecordFragment extends Fragment {
     }
 
     private void startRecord() {
-        if (mMediaRecorder != null) {
+        Data data = Data.getInstance();
+        if (data.mMediaRecorder != null) {
             try {
-                mTempFile = File.createTempFile("sound_record", "3gpp");
+                data.mTempFile = File.createTempFile("sound_record", "3gpp");
             } catch (IOException e) {
                 e.printStackTrace();
                 Log.e(TAG, "Can't create TempFile");
                 return;
             }
-            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-            mMediaRecorder.setOutputFile(mTempFile.getPath());
+            data.mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            data.mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+            data.mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            data.mMediaRecorder.setOutputFile(data.mTempFile.getPath());
             try {
-                mMediaRecorder.prepare();
+                data.mMediaRecorder.prepare();
             } catch (IOException e) {
                 e.printStackTrace();
                 Log.e(TAG, "Can't prepare MediaRecorder");
                 return;
             }
-            mMediaRecorder.start();
+            data.mMediaRecorder.start();
             recordButton.setImageResource(R.drawable.stop_button_play_pause_music);
-            mState = State.RECORDING;
-            mCounter = 0;
+            data.mState = State.RECORDING;
+            data.mCounter = 0;
             timerText.setText(durationStringFormat(0));
-            handler.postDelayed(runnable, 1000);
+            data.handler.postDelayed(runnable, 1000);
         }
     }
 
@@ -142,7 +161,7 @@ public class RecordFragment extends Fragment {
                         // Open the file and write into stream
                         BufferedInputStream fileStream;
                         try {
-                            fileStream = new BufferedInputStream(new FileInputStream(mTempFile));
+                            fileStream = new BufferedInputStream(new FileInputStream(Data.getInstance().mTempFile));
                         } catch (FileNotFoundException e) {
                             Log.i(TAG, "Failed to open audio file.");
                             return;
@@ -176,60 +195,82 @@ public class RecordFragment extends Fragment {
                 });
     }
 
+    private void saveToLocal(String fileName) {
+        File recordDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC) + "/records");
+        recordDirectory.mkdirs();
+        File file = new File(recordDirectory, fileName);
+        moveFile(Data.getInstance().mTempFile, file);
+    }
+
     private void endRecord() {
-        mMediaRecorder.stop();
-        mMediaRecorder.reset();
+        final Data data = Data.getInstance();
+        data.mMediaRecorder.stop();
+        data.mMediaRecorder.reset();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS");
         final String fileName = "record_" + sdf.format(new Date()) + ".3gpp";
+        final MainActivity activity = (MainActivity) getActivity();
 
-        String[] items = {"Local storage", "Google Drive"};
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Choose destination")
-                .setItems(items, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case 0:
-                                File recordDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC) + "/records");
-                                recordDirectory.mkdirs();
-                                File file = new File(recordDirectory, fileName);
-                                moveFile(mTempFile, file);
-                                break;
-                            case 1:
-                                saveToDrive(fileName);
-                                break;
-                            default:
-                                break;
+        if (activity.mGoogleApiClient == null) {
+            saveToLocal(fileName);
+        } else {
+            String[] items = {"Local storage", "Google Drive"};
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle("Choose destination")
+                    .setItems(items, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case 0:
+                                    saveToLocal(fileName);
+                                    break;
+                                case 1:
+                                    saveToDrive(fileName);
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
-                    }
-                })
-                .setCancelable(true)
-                .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        Log.i(TAG, "Cancel choosing dialog");
-                        mTempFile.delete();
-                    }
-                });
-        builder.create().show();
+                    })
+                    .setCancelable(true)
+                    .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialog) {
+                            Log.i(TAG, "Cancel choosing dialog");
+                            data.mTempFile.delete();
+                        }
+                    });
+            builder.create().show();
+        }
         recordButton.setImageResource(R.drawable.record_button_play_stop_music);
-        mState = State.WAITING;
-        handler.removeCallbacks(runnable);
+        data.mCounter = 0;
+        timerText.setText(durationStringFormat(0));
+        data.mState = State.WAITING;
+        data.handler.removeCallbacks(runnable);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_record, container, false);
+        Data data = Data.getInstance();
 
         timerText = (TextView) rootView.findViewById(R.id.time);
+        timerText.setText(durationStringFormat(data.mCounter));
+
         recordButton = (ImageView)rootView.findViewById(R.id.record);
-        mState = State.WAITING;
-        mMediaRecorder = new MediaRecorder();
+        switch (data.mState) {
+            case WAITING:
+                recordButton.setImageResource(R.drawable.record_button_play_stop_music);
+                break;
+            case RECORDING:
+                recordButton.setImageResource(R.drawable.stop_button_play_pause_music);
+                data.handler.postDelayed(runnable, 1000);
+                break;
+        }
 
         recordButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 Log.e("record", "click");
-                switch (mState) {
+                switch (Data.getInstance().mState) {
                     case WAITING:
                         startRecord();
                         break;
@@ -247,7 +288,7 @@ public class RecordFragment extends Fragment {
 
     @Override
     public void onStop() {
-        handler.removeCallbacks(runnable);
+        Data.getInstance().handler.removeCallbacks(runnable);
         super.onStop();
     }
 

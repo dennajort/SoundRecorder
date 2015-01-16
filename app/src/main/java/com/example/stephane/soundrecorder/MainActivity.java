@@ -1,5 +1,6 @@
 package com.example.stephane.soundrecorder;
 
+import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
@@ -34,15 +35,18 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
     private RecordFragment recordFragment = null;
     private PlayerFragment playerFragment = null;
     public GoogleApiClient mGoogleApiClient = null;
+    private Boolean shouldInitGoogle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        shouldInitGoogle = true;
         FragmentManager fragmentManager = getSupportFragmentManager();
         if (savedInstanceState != null) {
             playerFragment = (PlayerFragment) fragmentManager.getFragment(savedInstanceState, "playerFragment");
             recordFragment = (RecordFragment) fragmentManager.getFragment(savedInstanceState, "recordFragment");
+            shouldInitGoogle = savedInstanceState.getBoolean("shouldInitGoogle");
         }
         if (playerFragment == null) {
             Log.i("MainActivity", "new playerFragment");
@@ -53,12 +57,14 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
             recordFragment = new RecordFragment();
         }
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Drive.API)
-                .addScope(Drive.SCOPE_FILE)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
+        if (shouldInitGoogle) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(Drive.API)
+                    .addScope(Drive.SCOPE_FILE)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
+        }
 
         setContentView(R.layout.activity_main);
         mToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);
@@ -72,16 +78,16 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
             fragmentManager.beginTransaction().replace(R.id.container2, playerFragment).commit();
         }
 
-        //if (findViewById(R.id.main_land) == null) {
-            mNavigationDrawerFragment = (NavigationDrawerFragment) getFragmentManager().findFragmentById(R.id.fragment_drawer);
-            mNavigationDrawerFragment.setup(R.id.fragment_drawer, (DrawerLayout) findViewById(R.id.drawer), mToolbar);
-        //}
+        mNavigationDrawerFragment = (NavigationDrawerFragment) getFragmentManager().findFragmentById(R.id.fragment_drawer);
+        mNavigationDrawerFragment.setup(R.id.fragment_drawer, (DrawerLayout) findViewById(R.id.drawer), mToolbar);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mGoogleApiClient.connect();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
+        }
     }
 
     @Override
@@ -99,6 +105,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.putFragment(outState, "recordFragment", recordFragment);
         fragmentManager.putFragment(outState, "playerFragment", playerFragment);
+        outState.putBoolean("shouldInitGoogle", shouldInitGoogle);
     }
 
     @Override
@@ -185,6 +192,28 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case REQUEST_CODE_RESOLUTION:
+                switch (resultCode) {
+                    case RESULT_CANCELED:
+                        if (mGoogleApiClient != null) {
+                            mGoogleApiClient.disconnect();
+                            mGoogleApiClient = null;
+                        }
+                        shouldInitGoogle = false;
+                        break;
+                    case RESULT_OK:
+                        mGoogleApiClient.connect();
+                        break;
+                }
+                break;
+        }
+    }
+
+    @Override
     public void onConnectionFailed(ConnectionResult result) {
         if (!result.hasResolution()) {
             // show the localized error dialog.
@@ -196,6 +225,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerC
         // Called typically when the app is not yet authorized, and an
         // authorization
         // dialog is displayed to the user.
+        Log.e("LOL", Integer.toString(result.getErrorCode()));
         try {
             result.startResolutionForResult(this, REQUEST_CODE_RESOLUTION);
         } catch (IntentSender.SendIntentException e) {
